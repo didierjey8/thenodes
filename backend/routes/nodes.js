@@ -1,5 +1,7 @@
 const csv = require("csvtojson");
 const converter = require("json-2-csv");
+var formidable = require("formidable");
+var arrayToTree = require("array-to-tree");
 
 module.exports = {
   start(req, res) {
@@ -7,7 +9,6 @@ module.exports = {
   },
   async nodesGet(req, res) {
     {
-      var formidable = require("formidable");
       var form = new formidable.IncomingForm();
       form.parse(req, async function (err, fields, files) {
         var file = files.filetoupload.path;
@@ -15,7 +16,14 @@ module.exports = {
           noheader: false,
           delimiter: "\t",
         };
-        global.jsonData = await csv(config).fromFile(file);
+
+        let capturedData = await csv(config).fromFile(file);
+
+        capturedData = arrayToTree(capturedData, {
+          parentProperty: "parent",
+          customID: "id",
+        });
+        global.jsonData = capturedData;
         res.status(200).send(global.jsonData);
       });
     }
