@@ -1,0 +1,19 @@
+.space {
+  margin-top: 4px;
+}
+
+#treeWrapper {
+  width: 20%;
+}
+
+file {
+  text-align: center;
+}
+
+.show {
+  display: inline;
+}
+
+.hide {
+  display: none;
+}

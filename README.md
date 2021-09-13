@@ -18,7 +18,8 @@ node app.js
 
 ```bash
 Backend: Node.js
-Frontend: Vue.js
+Frontend 1: React.js
+Frontend 2: Vue.js
 ```
 
 and enjoy :)

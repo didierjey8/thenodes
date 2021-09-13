@@ -17,65 +17,76 @@ module.exports = {
           delimiter: "\t",
         };
 
-        let capturedData = await csv(config).fromFile(file);
+        global.jsonData = await csv(config).fromFile(file);
 
-        capturedData = arrayToTree(capturedData, {
+        capturedData = arrayToTree(global.jsonData, {
           parentProperty: "parent",
           customID: "id",
         });
-        global.jsonData = capturedData;
-        res.status(200).send(global.jsonData);
+
+        res.status(200).send(capturedData);
       });
     }
   },
   nodeUpdate(req, res) {
-    let jsonData = global.jsonData;
     let id = req.body.id;
     let name = req.body.name;
 
     let control = 0;
-    jsonData.forEach((item) => {
+    global.jsonData.forEach((item) => {
       if (item.id == id && item.read_only == 0) {
         item.name = name;
         control = 1;
       }
       return item;
     });
+
+    capturedData = arrayToTree(global.jsonData, {
+      parentProperty: "parent",
+      customID: "id",
+    });
+
     if (control == 1) {
-      res.status(200).send({ success: true, data: jsonData });
+      res.status(200).send({ success: true, data: capturedData });
     } else {
-      res
-        .status(400)
-        .json({ error: "You can't edit read_only elements.", data: jsonData });
+      res.status(400).json({
+        error: "You can't edit read_only elements.",
+        data: capturedData,
+      });
     }
   },
   nodeDelete(req, res) {
-    let jsonData = global.jsonData;
     let id = req.body.id;
+
     let control = 0;
 
-    jsonData.forEach((item, index) => {
+    global.jsonData.forEach((item, index) => {
       if (item.id == id && item.read_only == 0) {
         jsonData.splice(index, 1);
         control = 1;
       }
     });
+
+    capturedData = arrayToTree(jsonData, {
+      parentProperty: "parent",
+      customID: "id",
+    });
+
     if (control == 1) {
-      res.status(200).send({ success: true, data: jsonData });
+      res.status(200).send({ success: true, data: capturedData });
     } else {
       res.status(400).json({
         error: "You can't delete read_only elements.",
-        data: jsonData,
+        data: capturedData,
       });
     }
   },
   nodeCreate(req, res) {
-    let jsonData = global.jsonData;
     let parent = req.body.parent;
     let node = req.body.node;
     let newId = 0;
 
-    jsonData.map((item) => {
+    global.jsonData.map((item) => {
       elId = parseInt(item.id);
       if (elId > newId) {
         newId = parseInt(item.id);
@@ -88,13 +99,17 @@ module.exports = {
     let newOrder = ["id", "name", "description", "parent", "read_only"];
     node = JSON.parse(JSON.stringify(node, newOrder));
 
-    jsonData.push(node);
+    global.jsonData.push(node);
 
-    res.status(200).send({ success: true, id: newId, data: jsonData });
+    capturedData = arrayToTree(global.jsonData, {
+      parentProperty: "parent",
+      customID: "id",
+    });
+
+    res.status(200).send({ success: true, id: node.id, data: capturedData });
   },
   nodesExport(req, res) {
-    let jsonData = global.jsonData;
-    converter.json2csv(jsonData, (err, csv) => {
+    converter.json2csv(global.jsonData, (err, csv) => {
       res.setHeader("Content-disposition", "attachment; filename=output.csv");
       res.set("Content-Type", "text/csv");
       res.status(200).send(csv);
